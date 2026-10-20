@@ -1,44 +1,61 @@
 /* ==========================================================================
-   Ambient AI Voice Scribe - Modern Clinical Design System
+   Clinic AI Voice Scribe - Bootstrap Clinic Design System
+   Inspired by: https://preview.themewagon.com/Clinic/
+   Fonts: Roboto (Body), Montserrat (Headings), Lato (Nav & Badges)
    ========================================================================== */
 
 :root {
-  --bg-primary: #0a0f1d;
-  --bg-secondary: #111a33;
-  --bg-card: rgba(18, 28, 54, 0.75);
-  --bg-card-hover: rgba(25, 38, 72, 0.85);
-  --bg-input: #152243;
-  --border-color: rgba(148, 163, 184, 0.15);
-  --border-focus: #0d9488;
-  
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-subtle: #64748b;
-  
-  --primary: #0d9488;
-  --primary-hover: #0f766e;
-  --primary-glow: rgba(13, 148, 136, 0.35);
-  
-  --accent-cyan: #06b6d4;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
-  --accent-emerald: #10b981;
-  --accent-blue: #3b82f6;
-
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  /* Fonts */
+  --default-font: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --heading-font: 'Montserrat', sans-serif;
+  --nav-font: 'Lato', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 30px rgba(13, 148, 136, 0.3);
-  --shadow-pulse: 0 0 35px rgba(244, 63, 94, 0.45);
-  
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-full: 9999px;
+  /* Theme Colors */
+  --background-color: #f6f9fc;
+  --surface-color: #ffffff;
+  --light-background: #f4f8ff;
+  --dark-background: #112344;
+
+  --accent-color: #175cdd;
+  --accent-hover: #1247ab;
+  --accent-subtle: #eaf1fe;
+  --accent-border: #bfdbfe;
+
+  --heading-color: #112344;
+  --default-color: #3c4049;
+  --muted-color: #64748b;
+  --subtle-color: #94a3b8;
+
+  --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-focus: #175cdd;
+
+  --success-color: #059652;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+
+  --danger-color: #df1529;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+
+  --warning-color: #d97706;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+
+  --shadow-sm: 0 2px 6px rgba(17, 35, 68, 0.04);
+  --shadow-md: 0 5px 20px rgba(17, 35, 68, 0.08);
+  --shadow-lg: 0 12px 35px rgba(17, 35, 68, 0.12);
+  --shadow-btn: 0 4px 14px rgba(23, 92, 221, 0.25);
+  --shadow-danger: 0 4px 14px rgba(223, 21, 41, 0.25);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 50px;
 }
 
+/* Base Resets */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -46,213 +63,623 @@
 }
 
 body {
-  font-family: var(--font-sans);
-  background: radial-gradient(circle at 15% 20%, #112042 0%, var(--bg-primary) 70%);
-  color: var(--text-main);
-  min-height: 100vh;
+  font-family: var(--default-font);
+  color: var(--default-color);
+  background-color: var(--background-color);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
 }
 
-/* Glassmorphism containers */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
+  color: var(--heading-color);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+a {
+  color: var(--accent-color);
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* ==========================================================================
+   Clinic Topbar & Header
+   ========================================================================== */
+.clinic-topbar {
+  background-color: var(--dark-background);
+  color: #ffffff;
+  padding: 8px 0;
+  font-size: 0.82rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.clinic-topbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.topbar-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.topbar-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #e2e8f0;
+}
+
+.topbar-item svg {
+  color: #38bdf8;
+}
+
+.topbar-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-branding {
+  background: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.clinic-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.clinic-logo-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #175cdd 0%, #0d9488 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(23, 92, 221, 0.3);
+}
+
+.clinic-logo-text h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--heading-color);
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clinic-logo-text p {
+  font-size: 0.78rem;
+  color: var(--muted-color);
+  margin-top: 1px;
+}
+
+/* ==========================================================================
+   Navigation Stepper
+   ========================================================================== */
+.stepper-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--light-background);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--accent-border);
+}
+
+.stepper-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted-color);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  transition: all 0.2s ease;
+}
+
+.stepper-step.active {
+  background: var(--accent-color);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(23, 92, 221, 0.3);
+}
+
+.stepper-step.completed {
+  color: var(--accent-color);
+}
+
+/* Doctor Profile Chip */
+.doctor-profile-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+}
+
+.doctor-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent-subtle);
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Clinic Cards & Glass Panel Replacement
+   ========================================================================== */
+.clinic-card,
 .glass-panel {
-  background: var(--bg-card);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.glass-panel-interactive {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.glass-panel-interactive:hover {
-  background: var(--bg-card-hover);
-  border-color: rgba(13, 148, 136, 0.3);
-  transform: translateY(-2px);
+.clinic-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent-border);
 }
 
-/* Typography Helpers */
-h1, h2, h3, h4 {
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.clinic-card-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafcff;
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, #38bdf8 0%, #2dd4bf 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.clinic-card-body {
+  padding: 24px;
 }
 
-.badge {
+/* Trust Badges - Clinic Style */
+.trust-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.badge-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 10px;
+  gap: 8px;
+  background: var(--surface-color);
+  border: 1px solid var(--accent-border);
+  padding: 6px 14px;
   border-radius: var(--radius-full);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  box-shadow: var(--shadow-sm);
 }
 
-.badge-abdm {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+.badge-item svg {
+  color: var(--accent-color);
 }
 
-.badge-active {
-  background: rgba(244, 63, 94, 0.15);
-  color: #fb7185;
-  border: 1px solid rgba(244, 63, 94, 0.3);
-}
-
-.badge-draft {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.badge-approved {
-  background: rgba(6, 182, 212, 0.15);
-  color: #22d3ee;
-  border: 1px solid rgba(6, 182, 212, 0.3);
-}
-
-/* Button System */
+/* ==========================================================================
+   Buttons (Clinic Rounded Pill Style)
+   ========================================================================== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: var(--font-sans);
-  font-size: 0.925rem;
+  font-family: var(--nav-font);
+  font-size: 0.9rem;
   font-weight: 600;
-  padding: 10px 18px;
-  border-radius: var(--radius-md);
+  padding: 10px 22px;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
   cursor: pointer;
-  border: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  outline: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
-}
-.btn-primary:hover {
-  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
-  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.5);
-  transform: translateY(-1px);
+  background-color: var(--accent-color);
+  color: #ffffff !important;
+  box-shadow: var(--shadow-btn);
 }
 
-.btn-danger {
-  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
-}
-.btn-danger:hover {
-  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.5);
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  box-shadow: 0 6px 20px rgba(23, 92, 221, 0.35);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  background-color: var(--surface-color);
+  color: var(--default-color) !important;
   border: 1px solid var(--border-color);
 }
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: var(--heading-color) !important;
 }
 
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
+.btn-outline {
+  background-color: transparent;
+  color: var(--accent-color) !important;
+  border: 1.5px solid var(--accent-color);
 }
 
-/* Inputs and Forms */
-.input-field {
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--accent-subtle);
+  border-color: var(--accent-color);
+  color: var(--accent-hover) !important;
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: #ffffff !important;
+  box-shadow: var(--shadow-danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #b91020;
+  box-shadow: 0 6px 20px rgba(223, 21, 41, 0.35);
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(5, 150, 82, 0.25);
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #047842;
+  box-shadow: 0 6px 20px rgba(5, 150, 82, 0.35);
+}
+
+/* ==========================================================================
+   Badges
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--nav-font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.badge-abdm {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.badge-draft {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.badge-approved {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-recording {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  animation: pulse-badge 1.8s infinite;
+}
+
+@keyframes pulse-badge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* ==========================================================================
+   Form Controls (Clean Clinical Aesthetics)
+   ========================================================================== */
+.form-label {
+  display: block;
+  font-family: var(--nav-font);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--heading-color);
+  margin-bottom: 6px;
+}
+
+.input-field,
+.select-field,
+.textarea-field {
   width: 100%;
-  background: var(--bg-input);
-  border: 1px solid var(--border-color);
+  font-family: var(--default-font);
+  font-size: 0.92rem;
+  color: var(--default-color);
+  background-color: #ffffff;
+  border: 1.5px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 10px 14px;
-  color: var(--text-main);
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
   outline: none;
 }
-.input-field:focus {
+
+.input-field:focus,
+.select-field:focus,
+.textarea-field:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 0 0 3px rgba(23, 92, 221, 0.12);
+  background-color: #ffffff;
 }
 
-textarea.input-field {
+.textarea-field {
   resize: vertical;
-  min-height: 80px;
+  min-height: 90px;
 }
 
-/* Pulse Animation for Recording */
-@keyframes recordingPulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.6);
-  }
-  70% {
-    transform: scale(1.04);
-    box-shadow: 0 0 0 20px rgba(244, 63, 94, 0);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
-  }
+/* ==========================================================================
+   Audio Recording Interface (Clinic Style)
+   ========================================================================== */
+.recorder-hero {
+  background: linear-gradient(135deg, #f4f8ff 0%, #eaf1fe 100%);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .pulse-recording {
-  animation: recordingPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
-/* Audio Wave Visualizer Bars */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.15;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
 .wave-bar {
   width: 4px;
-  background: linear-gradient(180deg, #2dd4bf 0%, #0d9488 100%);
+  background: var(--accent-color);
   border-radius: 4px;
-  transition: height 0.1s ease;
+  transition: height 0.15s ease;
 }
 
-/* Modal overlay */
-.modal-backdrop {
+/* ==========================================================================
+   Live Transcript Bubble
+   ========================================================================== */
+.transcript-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+}
+
+.transcript-bubble {
+  background: #f8fafc;
+  border-left: 3px solid var(--accent-color);
+  border-radius: 4px 10px 10px 4px;
+  padding: 12px 16px;
+  transition: background 0.2s ease;
+}
+
+.transcript-bubble:hover {
+  background: #f1f5f9;
+}
+
+/* ==========================================================================
+   Table & Prescription Styling
+   ========================================================================== */
+.clinic-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 12px;
+}
+
+.clinic-table th {
+  background-color: #f8fafc;
+  color: var(--heading-color);
+  font-family: var(--nav-font);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border-color);
+  text-align: left;
+}
+
+.clinic-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.clinic-table tr:hover td {
+  background-color: #fafcff;
+}
+
+/* ==========================================================================
+   Modal Overlay
+   ========================================================================== */
+.modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 7, 18, 0.85);
-  backdrop-filter: blur(8px);
+  background-color: rgba(17, 35, 68, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 16px;
+  animation: modalFadeIn 0.2s ease;
 }
 
-/* Scrollbars */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-dialog {
+  background: var(--surface-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  max-width: 520px;
+  width: 100%;
+  overflow: hidden;
+  animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(20px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Alert Boxes */
+.alert-box {
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.alert-info {
+  background-color: var(--light-background);
+  border: 1px solid var(--accent-border);
+  color: var(--heading-color);
+}
+
+.alert-success {
+  background-color: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: #065f46;
+}
+
+.alert-danger {
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: #991b1b;
+}
+
+/* Patient Queue Card */
+.patient-item-card {
+  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.patient-item-card:hover {
+  border-color: var(--accent-color);
+  background-color: #fafcff;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.patient-item-card.selected {
+  border-color: var(--accent-color);
+  background: var(--light-background);
+  box-shadow: 0 0 0 2px rgba(23, 92, 221, 0.2);
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
+  background: #cbd5e1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+  background: #94a3b8;
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, CheckCircle2, User, RefreshCw, PlusCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, User, RefreshCw, PlusCircle, AlertCircle, ShieldCheck, Download, FileCode } from "lucide-react";
 import { NoteForm } from "../components/NoteForm";
 import { api } from "../api/client";
 
@@ -32,7 +32,7 @@ export function NoteEditor({ sessionId, patient, initialNote, onNewConsultation 
     try {
       const res = await api.notes.update(sessionId, editedNote);
       setNoteData(res.edited_json);
-      setMessage("Draft note successfully saved.");
+      setMessage("Draft note saved successfully.");
       setTimeout(() => setMessage(null), 3500);
     } catch (err) {
       setError("Failed to save changes: " + (err.response?.data?.detail || err.message));
@@ -59,73 +59,68 @@ export function NoteEditor({ sessionId, patient, initialNote, onNewConsultation 
     }
   };
 
-  const handleExportPdf = async () => {
-    try {
-      const blob = await api.notes.downloadFile(sessionId, "pdf");
-      const url = window.URL.createObjectURL(new Blob([blob], { type: "application/pdf" }));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `consultation_note_${sessionId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      setError("Failed to download PDF: " + err.message);
-    }
+  const handleExportPdf = () => {
+    window.print();
   };
 
-  const handleExportFhir = async () => {
-    try {
-      const fhirJson = await api.notes.downloadFile(sessionId, "fhir");
-      const jsonBlob = new Blob([JSON.stringify(fhirJson, null, 2)], { type: "application/json" });
-      const url = window.URL.createObjectURL(jsonBlob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `abdm_fhir_bundle_${sessionId}.json`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      setError("Failed to export FHIR JSON: " + err.message);
-    }
+  const handleExportFhir = () => {
+    if (!noteData) return;
+    const blob = new Blob([JSON.stringify(noteData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `FHIR_bundle_${patient.id}_${sessionId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div style={{ maxWidth: "860px", margin: "0 auto", padding: "0 16px" }}>
-      {/* Patient banner */}
-      <div className="glass-panel" style={{ padding: "16px 24px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(13, 148, 136, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <User size={20} color="#2dd4bf" />
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Top Banner: Patient Info & Actions */}
+      <div className="clinic-card clinic-card-header" style={{ padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <h2 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--heading-color)" }}>
+              {patient.name}
+            </h2>
+            <span className={`badge ${noteStatus === "approved" ? "badge-approved" : "badge-draft"}`}>
+              {noteStatus === "approved" ? "Signed & ABDM Approved" : "Draft (Pending Sign)"}
+            </span>
           </div>
-          <div>
-            <h3 style={{ fontSize: "1.05rem" }}>{patient?.name || "Consultation Patient"}</h3>
-            <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-              ID: {patient?.id} • {patient?.age} yrs • {patient?.gender}
-              {patient?.abha_id && ` • ABHA: ${patient.abha_id}`}
-            </div>
-          </div>
+          <p style={{ fontSize: "0.82rem", color: "var(--muted-color)", marginTop: "3px" }}>
+            OPD ID: <strong>{patient.id}</strong> &bull; Age: {patient.age}y &bull; Gender: {patient.gender}
+            {patient.abha_id && <> &bull; ABHA: <strong>{patient.abha_id}</strong></>}
+          </p>
         </div>
 
-        <button onClick={onNewConsultation} className="btn btn-secondary" style={{ padding: "8px 14px", fontSize: "0.85rem" }}>
-          <PlusCircle size={16} /> New Consultation
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <button onClick={handleExportPdf} className="btn btn-secondary" style={{ padding: "8px 14px", fontSize: "0.85rem" }}>
+            <Download size={15} /> Print / PDF
+          </button>
+          <button onClick={handleExportFhir} className="btn btn-secondary" style={{ padding: "8px 14px", fontSize: "0.85rem" }}>
+            <FileCode size={15} /> FHIR JSON
+          </button>
+          <button onClick={onNewConsultation} className="btn btn-outline" style={{ padding: "8px 16px", fontSize: "0.85rem" }}>
+            <PlusCircle size={16} /> Next Patient
+          </button>
+        </div>
       </div>
 
       {message && (
-        <div style={{ background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", color: "#34d399", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="alert-box alert-success">
           <CheckCircle2 size={18} />
           <span>{message}</span>
         </div>
       )}
 
       {error && (
-        <div style={{ background: "rgba(244, 63, 94, 0.15)", border: "1px solid rgba(244, 63, 94, 0.3)", color: "#fb7185", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="alert-box alert-danger">
           <AlertCircle size={18} />
           <span>{error}</span>
         </div>
       )}
 
+      {/* Note Form Component */}
       <NoteForm
         initialNote={noteData}
         status={noteStatus}

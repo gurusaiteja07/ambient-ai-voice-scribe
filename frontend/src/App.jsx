@@ -17,7 +17,7 @@ export function App() {
   useEffect(() => {
     if (api.auth.isAuthenticated()) {
       const storedDoctor = api.auth.getCurrentDoctor();
-      setDoctor(storedDoctor || { name: "Doctor", hospital: "AIIMS" });
+      setDoctor(storedDoctor || { name: "Doctor", hospital: "AIIMS New Delhi" });
       setCurrentView("patients");
     } else {
       setCurrentView("login");
@@ -62,10 +62,10 @@ export function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", padding: "16px", maxWidth: "1100px", margin: "0 auto" }}>
-      <Header doctor={doctor} onLogout={handleLogout} />
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--background-color)" }}>
+      <Header doctor={doctor} currentView={currentView} onLogout={handleLogout} />
 
-      <main style={{ paddingBottom: "40px" }}>
+      <main style={{ flex: 1, padding: "28px 20px 48px 20px", maxWidth: "1200px", width: "100%", margin: "0 auto" }}>
         {currentView === "patients" && (
           <PatientSelect onSessionStarted={handleSessionStarted} />
         )}
@@ -89,6 +89,18 @@ export function App() {
           />
         )}
       </main>
+
+      <footer style={{ background: "#ffffff", borderTop: "1px solid var(--border-color)", padding: "16px 20px", textAlign: "center", fontSize: "0.82rem", color: "var(--muted-color)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+          <div>
+            <strong>Clinic AI Voice Scribe</strong> &mdash; ABDM & NHA Compliant Public Healthcare Consultation System
+          </div>
+          <div style={{ display: "flex", gap: "16px" }}>
+            <span>Facility: AIIMS New Delhi</span>
+            <span>FHIR R4 Ready</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

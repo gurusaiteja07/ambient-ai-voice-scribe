@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, Activity, CheckSquare, ArrowLeft, AlertCircle } from "lucide-react";
+import { User, Activity, CheckSquare, ArrowLeft, AlertCircle, ShieldCheck, Languages, Stethoscope } from "lucide-react";
 import { RecordButton } from "../components/RecordButton";
 import { TranscriptBox } from "../components/TranscriptBox";
 import { ConsentModal } from "../components/ConsentModal";
@@ -58,113 +58,120 @@ export function Recorder({ session, patient, language, onConsultationComplete, o
   };
 
   const handleStopAndSummarize = async () => {
-    if (isRecording) {
-      stopRecording();
-    }
     setIsProcessingStop(true);
     setErrorMsg(null);
     try {
+      if (isRecording) {
+        await stopRecording();
+      }
+      // Trigger AI summarization on the backend
       const res = await api.sessions.stop(session.id);
       onConsultationComplete({
         sessionId: session.id,
-        note: res.note,
-        noteId: res.note_id,
+        note: res.note?.summary_json || res.note?.edited_json,
       });
     } catch (err) {
-      console.error("Stop session failed:", err);
-      setErrorMsg("Failed to generate clinical summary: " + (err.response?.data?.detail || err.message));
+      console.error("Error finalizing consultation:", err);
+      setErrorMsg("Failed to generate clinical note: " + (err.response?.data?.detail || err.message));
+    } finally {
       setIsProcessingStop(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 16px" }}>
-      {/* Patient Consultation Info Card */}
-      <div className="glass-panel" style={{ padding: "18px 24px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "rgba(13, 148, 136, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <User size={22} color="#2dd4bf" />
-          </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Top Banner: Patient Info Bar */}
+      <div className="clinic-card clinic-card-header" style={{ padding: "18px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button onClick={onBack} disabled={isRecording} className="btn btn-secondary" style={{ padding: "8px 12px", fontSize: "0.82rem" }}>
+            <ArrowLeft size={16} /> Patient Queue
+          </button>
           <div>
-            <h3 style={{ fontSize: "1.1rem" }}>{patient.name}</h3>
-            <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "flex", gap: "12px" }}>
-              <span>ID: <strong>{patient.id}</strong></span>
-              <span>•</span>
-              <span>{patient.age} yrs / {patient.gender}</span>
-              {patient.abha_id && (
-                <>
-                  <span>•</span>
-                  <span style={{ color: "#34d399" }}>ABHA: {patient.abha_id}</span>
-                </>
-              )}
+            <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "var(--heading-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+              {patient.name}
+              <span style={{ fontSize: "0.82rem", fontWeight: "500", color: "var(--muted-color)" }}>
+                ({patient.age}y, {patient.gender})
+              </span>
+            </h2>
+            <div style={{ fontSize: "0.8rem", color: "var(--muted-color)", marginTop: "2px", display: "flex", gap: "12px" }}>
+              <span>OPD ID: <strong>{patient.id}</strong></span>
+              {patient.abha_id && <span>ABHA: <strong>{patient.abha_id}</strong></span>}
             </div>
           </div>
         </div>
 
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: "0.75rem", color: "var(--text-subtle)", fontFamily: "var(--font-mono)" }}>
-            SESSION: {session.id}
-          </div>
-          <span className="badge badge-active" style={{ marginTop: "4px" }}>
-            <Activity size={12} /> Consultation In Progress
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span className="badge badge-abdm">
+            <Languages size={12} /> {language}
+          </span>
+          <span className={`badge ${isRecording ? "badge-recording" : "badge-approved"}`}>
+            {isRecording ? "Listening Ambiently" : "Ready"}
           </span>
         </div>
       </div>
 
-      {(recorderError || errorMsg) && (
-        <div style={{ background: "rgba(244, 63, 94, 0.15)", border: "1px solid rgba(244, 63, 94, 0.3)", color: "#fb7185", borderRadius: "8px", padding: "12px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+      {(errorMsg || recorderError) && (
+        <div className="alert-box alert-danger">
           <AlertCircle size={18} />
-          <span>{recorderError || errorMsg}</span>
+          <span>{errorMsg || recorderError}</span>
         </div>
       )}
 
-      {/* Main Recording Centerpiece */}
-      <div className="glass-panel" style={{ padding: "24px", marginBottom: "20px", textAlign: "center" }}>
-        <RecordButton
-          isRecording={isRecording}
-          duration={duration}
-          audioLevel={audioLevel}
-          onStart={handleStartClicked}
-          onStop={stopRecording}
-          disabled={isProcessingStop}
+      {/* Main Grid: Recording Controller & Live Transcript */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "24px" }}>
+        {/* Left: Recorder Card */}
+        <div className="clinic-card" style={{ padding: "28px", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "24px" }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "var(--light-background)", padding: "6px 14px", borderRadius: "var(--radius-full)", border: "1px solid var(--accent-border)", fontSize: "0.82rem", fontWeight: "600", color: "var(--accent-color)", marginBottom: "16px" }}>
+              <Stethoscope size={14} /> Ambient Doctor-Patient Consultation
+            </div>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "700", color: "var(--heading-color)", marginBottom: "6px" }}>
+              {isRecording ? "Consultation in Progress" : "Start Voice Consultation"}
+            </h3>
+            <p style={{ fontSize: "0.86rem", color: "var(--muted-color)" }}>
+              {isRecording
+                ? "Microphone is listening ambiently. Speech is transcribed and processed securely."
+                : "Obtain verbal consent and press Start to record the patient interaction."}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "center", margin: "10px 0" }}>
+            <RecordButton
+              isRecording={isRecording}
+              duration={duration}
+              audioLevel={audioLevel}
+              onStart={handleStartClicked}
+              onStop={stopRecording}
+              disabled={isProcessingStop}
+            />
+          </div>
+
+          <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "20px" }}>
+            <button
+              onClick={handleStopAndSummarize}
+              disabled={isProcessingStop || (chunks.length === 0 && !isRecording)}
+              className="btn btn-primary"
+              style={{ width: "100%", padding: "14px", fontSize: "0.95rem" }}
+            >
+              <CheckSquare size={18} />
+              {isProcessingStop ? "Generating Clinical SOAP Note..." : "Complete Consultation & Generate Note"}
+            </button>
+          </div>
+        </div>
+
+        {/* Right: Live Transcript Card */}
+        <div style={{ height: "100%" }}>
+          <TranscriptBox chunks={chunks} language={language} />
+        </div>
+      </div>
+
+      {showConsentModal && (
+        <ConsentModal
+          patientName={patient.name}
+          onConsentGranted={handleConsentGranted}
+          onCancel={() => setShowConsentModal(false)}
         />
-      </div>
-
-      {/* Live Transcript Display */}
-      <div style={{ marginBottom: "20px" }}>
-        <TranscriptBox chunks={chunks} language={language} />
-      </div>
-
-      {/* Finish & Summarize Button */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={isRecording || isProcessingStop}
-          className="btn btn-secondary"
-        >
-          <ArrowLeft size={16} /> Back to Patients
-        </button>
-
-        <button
-          type="button"
-          onClick={handleStopAndSummarize}
-          disabled={isProcessingStop || (chunks.length === 0 && !isRecording)}
-          className="btn btn-primary"
-          style={{ padding: "12px 24px" }}
-        >
-          <CheckSquare size={18} />
-          {isProcessingStop ? "Synthesizing Clinical Note..." : "Finish Consultation & Generate Note"}
-        </button>
-      </div>
-
-      {/* Patient Consent Dialog */}
-      <ConsentModal
-        isOpen={showConsentModal}
-        patientName={patient.name}
-        onConsentGranted={handleConsentGranted}
-        onCancel={() => setShowConsentModal(false)}
-      />
+      )}
     </div>
   );
 }

@@ -1,75 +1,63 @@
 import React, { useState } from "react";
-import { ShieldCheck, AlertCircle, Mic, CheckCircle } from "lucide-react";
+import { ShieldCheck, Mic, X } from "lucide-react";
 
-export function ConsentModal({ isOpen, patientName, onConsentGranted, onCancel }) {
+export function ConsentModal({ patientName, onConsentGranted, onCancel }) {
   const [agreed, setAgreed] = useState(false);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-backdrop">
-      <div className="glass-panel" style={{ maxWidth: "480px", width: "100%", padding: "28px", border: "1px solid rgba(13, 148, 136, 0.4)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-          <div style={{
-            width: "38px",
-            height: "38px",
-            borderRadius: "50%",
-            background: "rgba(13, 148, 136, 0.2)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#2dd4bf"
-          }}>
-            <ShieldCheck size={22} />
+    <div className="modal-overlay">
+      <div className="modal-dialog">
+        <div className="clinic-card-header" style={{ padding: "16px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <ShieldCheck size={20} color="var(--accent-color)" />
+            <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--heading-color)" }}>Patient Consultation Consent</h3>
           </div>
-          <div>
-            <h3 style={{ fontSize: "1.15rem" }}>Patient Consent Verification</h3>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>ABDM Privacy & Digital Health Guidelines</p>
-          </div>
-        </div>
-
-        <div style={{
-          background: "rgba(255, 255, 255, 0.04)",
-          padding: "16px",
-          borderRadius: "10px",
-          fontSize: "0.88rem",
-          color: "#cbd5e1",
-          lineHeight: "1.5",
-          marginBottom: "20px"
-        }}>
-          <p style={{ marginBottom: "10px" }}>
-            The patient (<strong>{patientName || "Current Patient"}</strong>) has been informed that:
-          </p>
-          <ul style={{ paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "6px" }}>
-            <li>This clinical consultation is being transcribed by an on-premise AI voice assistant.</li>
-            <li>Audio stays secure within hospital servers and is used only to generate clinical notes.</li>
-            <li>The doctor will review, edit, and digitally sign all records before saving.</li>
-          </ul>
-        </div>
-
-        <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginBottom: "24px" }}>
-          <input
-            type="checkbox"
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-            style={{ width: "18px", height: "18px", accentColor: "#0d9488" }}
-          />
-          <span style={{ fontSize: "0.9rem", color: "#f1f5f9" }}>
-            Verbal consent obtained from patient or guardian
-          </span>
-        </label>
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
-          <button onClick={onCancel} className="btn btn-secondary">
-            Cancel
-          </button>
           <button
-            onClick={onConsentGranted}
-            disabled={!agreed}
-            className="btn btn-primary"
+            onClick={onCancel}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-color)" }}
           >
-            <Mic size={16} /> Proceed to Record
+            <X size={18} />
           </button>
+        </div>
+
+        <div style={{ padding: "24px" }}>
+          <p style={{ fontSize: "0.92rem", color: "var(--default-color)", marginBottom: "16px", lineHeight: 1.5 }}>
+            Under NHA & ABDM guidelines, verbal consent must be obtained from <strong>{patientName}</strong> before enabling ambient voice documentation:
+          </p>
+
+          <div style={{ background: "var(--light-background)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-md)", padding: "16px", marginBottom: "20px" }}>
+            <ul style={{ paddingLeft: "18px", fontSize: "0.84rem", color: "var(--heading-color)", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <li>The conversation is recorded solely to assist the doctor with OPD clinical notes.</li>
+              <li>Audio data is discarded immediately after summarization (zero audio retention).</li>
+              <li>The treating doctor reviews, edits, and digitally signs all generated notes before finalizing.</li>
+            </ul>
+          </div>
+
+          <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginBottom: "24px" }}>
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              style={{ width: "18px", height: "18px", accentColor: "var(--accent-color)" }}
+            />
+            <span style={{ fontSize: "0.9rem", color: "var(--heading-color)", fontWeight: "600" }}>
+              Verbal consent obtained from patient or legal guardian
+            </span>
+          </label>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+            <button onClick={onCancel} className="btn btn-secondary" style={{ padding: "8px 16px" }}>
+              Cancel
+            </button>
+            <button
+              onClick={onConsentGranted}
+              disabled={!agreed}
+              className="btn btn-primary"
+              style={{ padding: "8px 20px" }}
+            >
+              <Mic size={16} /> Proceed to Record
+            </button>
+          </div>
         </div>
       </div>
     </div>

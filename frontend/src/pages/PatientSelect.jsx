@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { UserCheck, UserPlus, ArrowRight, Search, Languages, CreditCard } from "lucide-react";
+import { UserCheck, UserPlus, ArrowRight, Search, Languages, CreditCard, ShieldCheck, User } from "lucide-react";
 import { api } from "../api/client";
 
 export function PatientSelect({ onSessionStarted }) {
   const [patients, setPatients] = useState([]);
   const [selectedPatientId, setSelectedPatientId] = useState("PID-1001");
   const [language, setLanguage] = useState("English");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -58,79 +59,88 @@ export function PatientSelect({ onSessionStarted }) {
   };
 
   const handleStartSession = async () => {
-    if (!selectedPatientId) {
-      setError("Please select or enter a Patient ID.");
-      return;
-    }
+    const selected = patients.find((p) => p.id === selectedPatientId);
+    if (!selected) return;
+
     setLoading(true);
     setError(null);
     try {
-      const session = await api.sessions.create(selectedPatientId, language);
-      const patient = patients.find((p) => p.id === selectedPatientId) || {
-        id: selectedPatientId,
-        name: "Patient " + selectedPatientId,
-      };
-      onSessionStarted({ session, patient, language });
+      const session = await api.sessions.start(selected.id, language);
+      onSessionStarted({
+        session,
+        patient: selected,
+        language,
+      });
     } catch (err) {
-      console.error(err);
-      setError("Could not start consultation session: " + (err.response?.data?.detail || err.message));
+      setError("Failed to initialize consultation: " + (err.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
     }
   };
 
+  const filteredPatients = patients.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.abha_id && p.abha_id.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    p.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div style={{ maxWidth: "680px", margin: "0 auto", padding: "0 16px" }}>
-      <div className="glass-panel" style={{ padding: "32px" }}>
-        <div style={{ marginBottom: "24px" }}>
-          <h2 style={{ fontSize: "1.4rem", marginBottom: "4px" }}>Start Outpatient Consultation</h2>
-          <p style={{ fontSize: "0.88rem", color: "var(--text-muted)" }}>
-            Select an existing patient record or register a new walk-in patient.
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Top Queue Bar */}
+      <div className="clinic-card clinic-card-header" style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div>
+          <h2 style={{ fontSize: "1.35rem", fontWeight: "700", color: "var(--heading-color)", display: "flex", alignItems: "center", gap: "10px" }}>
+            OPD Patient Queue
+            <span className="badge badge-approved" style={{ fontSize: "0.78rem" }}>
+              {patients.length} Waiting
+            </span>
+          </h2>
+          <p style={{ fontSize: "0.85rem", color: "var(--muted-color)", marginTop: "2px" }}>
+            Select an active patient or register a new one to begin ambient consultation recording
           </p>
         </div>
 
-        {error && (
-          <div
-            style={{
-              background: "rgba(244, 63, 94, 0.15)",
-              border: "1px solid rgba(244, 63, 94, 0.3)",
-              color: "#fb7185",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              fontSize: "0.85rem",
-              marginBottom: "20px",
-            }}
-          >
-            {error}
+        <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Language Selector */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--light-background)", padding: "6px 14px", borderRadius: "var(--radius-full)", border: "1px solid var(--accent-border)" }}>
+            <Languages size={16} color="var(--accent-color)" />
+            <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--heading-color)" }}>Language:</span>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              style={{ border: "none", background: "transparent", fontWeight: "700", color: "var(--accent-color)", cursor: "pointer", outline: "none", fontSize: "0.86rem" }}
+            >
+              <option value="English">English</option>
+              <option value="Hindi">Hindi (हिंदी)</option>
+              <option value="Hinglish">Hinglish (Mixed)</option>
+            </select>
           </div>
-        )}
 
-        {/* Toggle Existing vs New Patient */}
-        <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
           <button
-            type="button"
-            onClick={() => setShowCreateForm(false)}
-            className={`btn ${!showCreateForm ? "btn-primary" : "btn-secondary"}`}
-            style={{ flex: 1, padding: "10px" }}
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="btn btn-secondary"
+            style={{ fontSize: "0.86rem", padding: "8px 16px" }}
           >
-            <UserCheck size={16} /> Existing Patient
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowCreateForm(true)}
-            className={`btn ${showCreateForm ? "btn-primary" : "btn-secondary"}`}
-            style={{ flex: 1, padding: "10px" }}
-          >
-            <UserPlus size={16} /> New OPD Registration
+            <UserPlus size={16} /> {showCreateForm ? "Close Form" : "Register Patient"}
           </button>
         </div>
+      </div>
 
-        {showCreateForm ? (
-          <form onSubmit={handleCreatePatient} style={{ display: "flex", flexDirection: "column", gap: "14px", marginBottom: "24px" }}>
+      {error && (
+        <div className="alert-box alert-danger">
+          {error}
+        </div>
+      )}
+
+      {/* New Patient Registration Card */}
+      {showCreateForm && (
+        <div className="clinic-card" style={{ padding: "24px", border: "1.5px solid var(--accent-border)", backgroundColor: "var(--light-background)" }}>
+          <h3 style={{ fontSize: "1.1rem", marginBottom: "16px", color: "var(--heading-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+            <UserPlus size={18} color="var(--accent-color)" /> Fast OPD Patient Registration
+          </h3>
+          <form onSubmit={handleCreatePatient} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", alignItems: "end" }}>
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px" }}>
-                Patient Full Name *
-              </label>
+              <label className="form-label">Full Name *</label>
               <input
                 type="text"
                 required
@@ -140,137 +150,148 @@ export function PatientSelect({ onSessionStarted }) {
                 onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
               />
             </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px" }}>
-                  Age *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  max="125"
-                  className="input-field"
-                  placeholder="e.g. 45"
-                  value={newPatient.age}
-                  onChange={(e) => setNewPatient({ ...newPatient, age: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px" }}>
-                  Gender *
-                </label>
-                <select
-                  className="input-field"
-                  value={newPatient.gender}
-                  onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })}
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px" }}>
-                ABHA ID / Health ID (Optional)
-              </label>
-              <div style={{ position: "relative" }}>
-                <input
-                  type="text"
-                  className="input-field"
-                  style={{ paddingLeft: "36px" }}
-                  placeholder="14-digit ABHA (e.g. 14-5521-8890-1234)"
-                  value={newPatient.abha_id}
-                  onChange={(e) => setNewPatient({ ...newPatient, abha_id: e.target.value })}
-                />
-                <CreditCard size={16} color="#94a3b8" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)" }} />
-              </div>
+              <label className="form-label">Age *</label>
+              <input
+                type="number"
+                required
+                min="0"
+                max="125"
+                className="input-field"
+                placeholder="Years"
+                value={newPatient.age}
+                onChange={(e) => setNewPatient({ ...newPatient, age: e.target.value })}
+              />
             </div>
-
-            <button type="submit" disabled={loading} className="btn btn-primary" style={{ marginTop: "6px" }}>
-              Save & Select Patient
-            </button>
+            <div>
+              <label className="form-label">Gender *</label>
+              <select
+                className="input-field"
+                value={newPatient.gender}
+                onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })}
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="form-label">ABHA ID (Ayushman Bharat)</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="XX-XXXX-XXXX-XXXX"
+                value={newPatient.abha_id}
+                onChange={(e) => setNewPatient({ ...newPatient, abha_id: e.target.value })}
+              />
+            </div>
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary"
+                style={{ width: "100%", padding: "10px" }}
+              >
+                Save & Add to Queue
+              </button>
+            </div>
           </form>
-        ) : (
-          <div style={{ marginBottom: "24px" }}>
-            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "8px" }}>
-              Select Patient Record
-            </label>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }}>
-              {patients.length === 0 ? (
-                <div style={{ padding: "16px", textAlign: "center", color: "var(--text-subtle)", border: "1px dashed var(--border-color)", borderRadius: "8px" }}>
-                  No patients found. Click "New OPD Registration" to add one.
+        </div>
+      )}
+
+      {/* Search Bar */}
+      <div style={{ position: "relative" }}>
+        <input
+          type="text"
+          className="input-field"
+          style={{ paddingLeft: "42px", height: "48px", fontSize: "0.95rem" }}
+          placeholder="Search patient by name, OPD number or ABHA ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <Search size={18} color="var(--subtle-color)" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
+      </div>
+
+      {/* Patient Cards Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "16px" }}>
+        {filteredPatients.map((patient) => {
+          const isSelected = patient.id === selectedPatientId;
+          return (
+            <div
+              key={patient.id}
+              onClick={() => setSelectedPatientId(patient.id)}
+              className={`patient-item-card ${isSelected ? "selected" : ""}`}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <div style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "12px",
+                  background: isSelected ? "var(--accent-color)" : "var(--accent-subtle)",
+                  color: isSelected ? "#ffffff" : "var(--accent-color)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "700",
+                  fontSize: "1.1rem"
+                }}>
+                  {patient.name.charAt(0).toUpperCase()}
                 </div>
-              ) : (
-                patients.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => setSelectedPatientId(p.id)}
-                    className="glass-panel glass-panel-interactive"
-                    style={{
-                      padding: "12px 16px",
-                      cursor: "pointer",
-                      border: selectedPatientId === p.id ? "1.5px solid #0d9488" : "1px solid var(--border-color)",
-                      background: selectedPatientId === p.id ? "rgba(13, 148, 136, 0.15)" : "rgba(255, 255, 255, 0.02)",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: "600", fontSize: "0.95rem" }}>{p.name}</div>
-                      <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                        ID: {p.id} ? {p.age} yrs ? {p.gender}
-                      </div>
-                    </div>
-                    {p.abha_id && (
-                      <span className="badge badge-abdm" style={{ fontSize: "0.7rem" }}>
-                        ABHA: {p.abha_id}
+                <div>
+                  <div style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--heading-color)" }}>
+                    {patient.name}
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "var(--muted-color)", marginTop: "2px" }}>
+                    {patient.age} yrs &bull; {patient.gender} &bull; <strong style={{ color: "var(--heading-color)" }}>{patient.id}</strong>
+                  </div>
+                  <div style={{ marginTop: "6px" }}>
+                    {patient.abha_id ? (
+                      <span className="badge badge-abdm" style={{ fontSize: "0.72rem" }}>
+                        <ShieldCheck size={11} /> {patient.abha_id}
+                      </span>
+                    ) : (
+                      <span className="badge badge-draft" style={{ fontSize: "0.72rem" }}>
+                        No ABHA Linked
                       </span>
                     )}
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
+                </div>
+              </div>
 
-        {/* Consultation Spoken Language */}
-        <div style={{ marginBottom: "28px" }}>
-          <label style={{ fontSize: "0.85rem", fontWeight: "600", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-            <Languages size={16} color="#2dd4bf" /> Consultation Spoken Language
-          </label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "8px" }}>
-            {["English", "Hindi", "Bengali", "Tamil", "Telugu", "Marathi"].map((lang) => (
-              <button
-                key={lang}
-                type="button"
-                onClick={() => setLanguage(lang)}
-                className={`btn ${language === lang ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "8px", fontSize: "0.82rem" }}
-              >
-                {lang}
-              </button>
-            ))}
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "6px" }}>
-            Multilingual Whisper & LLM will automatically transcribe and translate output to English clinical note.
-          </p>
+              <div>
+                <input
+                  type="radio"
+                  name="selectedPatient"
+                  checked={isSelected}
+                  onChange={() => setSelectedPatientId(patient.id)}
+                  style={{ width: "20px", height: "20px", accentColor: "var(--accent-color)", cursor: "pointer" }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Action Footer */}
+      <div className="clinic-card" style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginTop: "8px" }}>
+        <div>
+          <span style={{ fontSize: "0.92rem", color: "var(--default-color)" }}>
+            Selected Patient: <strong style={{ color: "var(--accent-color)" }}>
+              {patients.find((p) => p.id === selectedPatientId)?.name || "None"}
+            </strong>
+          </span>
+          <span style={{ marginLeft: "12px", fontSize: "0.82rem", color: "var(--muted-color)" }}>
+            Language: <strong>{language}</strong>
+          </span>
         </div>
 
-        {/* Start Button */}
         <button
-          type="button"
           onClick={handleStartSession}
-          disabled={loading || !selectedPatientId}
+          disabled={!selectedPatientId || loading}
           className="btn btn-primary"
-          style={{ width: "100%", padding: "14px", fontSize: "1rem" }}
+          style={{ padding: "12px 28px", fontSize: "0.95rem" }}
         >
-          {loading ? "Initializing Session..." : "Start Ambient Consultation"} <ArrowRight size={18} />
+          {loading ? "Starting Consultation..." : "Start Consultation"} <ArrowRight size={18} />
         </button>
       </div>
     </div>

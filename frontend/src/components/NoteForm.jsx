@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle2, Lock, Download, FileText, Plus, Trash2, Save, FileCode } from "lucide-react";
+import { CheckCircle2, Lock, Download, FileText, Plus, Trash2, Save, FileCode, Pill, Activity, Stethoscope } from "lucide-react";
 
 export function NoteForm({
   initialNote,
@@ -24,6 +24,7 @@ export function NoteForm({
   });
 
   const [newSymptom, setNewSymptom] = useState("");
+  const [newInvestigation, setNewInvestigation] = useState("");
   const isApproved = status === "approved";
 
   useEffect(() => {
@@ -65,6 +66,24 @@ export function NoteForm({
     }));
   };
 
+  const handleAddInvestigation = (e) => {
+    e.preventDefault();
+    if (!newInvestigation.trim() || isApproved) return;
+    setNote((prev) => ({
+      ...prev,
+      investigations: [...prev.investigations, newInvestigation.trim()],
+    }));
+    setNewInvestigation("");
+  };
+
+  const handleRemoveInvestigation = (idx) => {
+    if (isApproved) return;
+    setNote((prev) => ({
+      ...prev,
+      investigations: prev.investigations.filter((_, i) => i !== idx),
+    }));
+  };
+
   const handleAddMedication = () => {
     if (isApproved) return;
     setNote((prev) => ({
@@ -94,309 +113,334 @@ export function NoteForm({
   };
 
   return (
-    <div className="glass-panel" style={{ padding: "28px" }}>
-      {/* Header bar */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h2 style={{ fontSize: "1.25rem", display: "flex", alignItems: "center", gap: "10px" }}>
-            Structured Clinical Note (SOAP)
-            {isApproved ? (
-              <span className="badge badge-approved">
-                <Lock size={12} /> Approved & Signed
-              </span>
-            ) : (
-              <span className="badge badge-draft">
-                Draft (Doctor Editable)
-              </span>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* SOAP Section 1: Subjective */}
+      <div className="clinic-card" style={{ padding: "24px" }}>
+        <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--heading-color)", marginBottom: "18px", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+          <Activity size={18} color="var(--accent-color)" /> Subjective Findings & Clinical History
+        </h3>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div>
+            <label className="form-label">Chief Complaint</label>
+            <input
+              type="text"
+              disabled={isApproved}
+              className="input-field"
+              value={note.chief_complaint}
+              onChange={(e) => handleFieldChange("chief_complaint", e.target.value)}
+              placeholder="e.g. High fever with chills and dry cough for 3 days"
+            />
+          </div>
+
+          <div>
+            <label className="form-label">History of Present Illness (HPI)</label>
+            <textarea
+              disabled={isApproved}
+              className="textarea-field"
+              value={note.history_of_present_illness}
+              onChange={(e) => handleFieldChange("history_of_present_illness", e.target.value)}
+              placeholder="Detailed clinical chronology..."
+            />
+          </div>
+
+          {/* Symptoms Badges */}
+          <div>
+            <label className="form-label">Symptoms & Clinical Manifestations</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
+              {note.symptoms.map((symptom, idx) => (
+                <span
+                  key={idx}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: "var(--light-background)",
+                    color: "var(--accent-color)",
+                    border: "1px solid var(--accent-border)",
+                    padding: "5px 12px",
+                    borderRadius: "var(--radius-full)",
+                    fontSize: "0.84rem",
+                    fontWeight: "600",
+                  }}
+                >
+                  {symptom}
+                  {!isApproved && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSymptom(idx)}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger-color)", display: "flex" }}
+                    >
+                      &times;
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+
+            {!isApproved && (
+              <form onSubmit={handleAddSymptom} style={{ display: "flex", gap: "8px", maxWidth: "420px" }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Add symptom (e.g. Headache)..."
+                  value={newSymptom}
+                  onChange={(e) => setNewSymptom(e.target.value)}
+                  style={{ height: "38px" }}
+                />
+                <button type="submit" className="btn btn-secondary" style={{ padding: "6px 14px", height: "38px", fontSize: "0.84rem" }}>
+                  <Plus size={14} /> Add
+                </button>
+              </form>
             )}
-          </h2>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-muted)", marginTop: "2px" }}>
-            {isApproved
-              ? "This note has been reviewed, approved, and locked for ABDM compliance."
-              : "Review AI-extracted clinical items below. Edit any field before final approval."}
-          </p>
+          </div>
+        </div>
+      </div>
+
+      {/* SOAP Section 2: Objective & Diagnosis */}
+      <div className="clinic-card" style={{ padding: "24px" }}>
+        <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--heading-color)", marginBottom: "18px", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+          <Stethoscope size={18} color="var(--accent-color)" /> Physical Examination & Assessment
+        </h3>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+          <div>
+            <label className="form-label">Physical Examination / Vitals</label>
+            <textarea
+              disabled={isApproved}
+              className="textarea-field"
+              value={note.examination}
+              onChange={(e) => handleFieldChange("examination", e.target.value)}
+              placeholder="BP: 120/80 mmHg, Pulse: 78 bpm, Temp: 98.6 F, Chest: Clear bilateral"
+            />
+          </div>
+
+          <div>
+            <label className="form-label">Provisional Diagnosis (ICD-10 / SNOMED-CT)</label>
+            <textarea
+              disabled={isApproved}
+              className="textarea-field"
+              value={note.diagnosis}
+              onChange={(e) => handleFieldChange("diagnosis", e.target.value)}
+              placeholder="e.g. Acute Upper Respiratory Tract Infection (ICD-10: J06.9)"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* SOAP Section 3: Plan & Prescription */}
+      <div className="clinic-card" style={{ padding: "24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px", marginBottom: "18px" }}>
+          <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--heading-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+            <Pill size={18} color="var(--accent-color)" /> Rx &mdash; Medications & Prescription
+          </h3>
+          {!isApproved && (
+            <button onClick={handleAddMedication} className="btn btn-secondary" style={{ padding: "6px 14px", fontSize: "0.82rem" }}>
+              <Plus size={14} /> Add Medicine
+            </button>
+          )}
         </div>
 
-        {/* Action buttons */}
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        {note.medications.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "20px", color: "var(--muted-color)", fontSize: "0.88rem" }}>
+            No medications prescribed. Click "Add Medicine" to create a prescription item.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="clinic-table">
+              <thead>
+                <tr>
+                  <th style={{ width: "35%" }}>Medicine / Drug Name</th>
+                  <th style={{ width: "20%" }}>Dosage</th>
+                  <th style={{ width: "25%" }}>Frequency</th>
+                  <th style={{ width: "15%" }}>Duration</th>
+                  {!isApproved && <th style={{ width: "5%" }}></th>}
+                </tr>
+              </thead>
+              <tbody>
+                {note.medications.map((med, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      <input
+                        type="text"
+                        disabled={isApproved}
+                        className="input-field"
+                        style={{ height: "36px", fontSize: "0.88rem" }}
+                        value={med.name}
+                        onChange={(e) => handleMedChange(idx, "name", e.target.value)}
+                        placeholder="e.g. Paracetamol 650mg"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        disabled={isApproved}
+                        className="input-field"
+                        style={{ height: "36px", fontSize: "0.88rem" }}
+                        value={med.dose}
+                        onChange={(e) => handleMedChange(idx, "dose", e.target.value)}
+                        placeholder="1 tablet"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        disabled={isApproved}
+                        className="input-field"
+                        style={{ height: "36px", fontSize: "0.88rem" }}
+                        value={med.frequency}
+                        onChange={(e) => handleMedChange(idx, "frequency", e.target.value)}
+                        placeholder="Thrice daily after food"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        disabled={isApproved}
+                        className="input-field"
+                        style={{ height: "36px", fontSize: "0.88rem" }}
+                        value={med.duration}
+                        onChange={(e) => handleMedChange(idx, "duration", e.target.value)}
+                        placeholder="5 days"
+                      />
+                    </td>
+                    {!isApproved && (
+                      <td>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMedication(idx)}
+                          style={{ background: "none", border: "none", color: "var(--danger-color)", cursor: "pointer" }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* SOAP Section 4: Investigations & Follow-up */}
+      <div className="clinic-card" style={{ padding: "24px" }}>
+        <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--heading-color)", marginBottom: "18px", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+          <FileText size={18} color="var(--accent-color)" /> Investigations, Advice & Follow-up
+        </h3>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+          <div>
+            <label className="form-label">Diagnostic Tests & Investigations</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
+              {note.investigations.map((inv, idx) => (
+                <span
+                  key={idx}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: "var(--light-background)",
+                    color: "var(--heading-color)",
+                    border: "1px solid var(--border-color)",
+                    padding: "4px 10px",
+                    borderRadius: "var(--radius-md)",
+                    fontSize: "0.82rem",
+                  }}
+                >
+                  {inv}
+                  {!isApproved && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveInvestigation(idx)}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger-color)" }}
+                    >
+                      &times;
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+
+            {!isApproved && (
+              <form onSubmit={handleAddInvestigation} style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="e.g. Complete Blood Count (CBC)..."
+                  value={newInvestigation}
+                  onChange={(e) => setNewInvestigation(e.target.value)}
+                  style={{ height: "38px" }}
+                />
+                <button type="submit" className="btn btn-secondary" style={{ padding: "6px 14px", height: "38px", fontSize: "0.84rem" }}>
+                  <Plus size={14} /> Add
+                </button>
+              </form>
+            )}
+          </div>
+
+          <div>
+            <label className="form-label">Doctor Advice & Precautions</label>
+            <textarea
+              disabled={isApproved}
+              className="textarea-field"
+              value={note.advice}
+              onChange={(e) => handleFieldChange("advice", e.target.value)}
+              placeholder="e.g. Plenty of oral fluids, rest, avoid cold drinks."
+            />
+          </div>
+
+          <div>
+            <label className="form-label">Follow-up Schedule</label>
+            <input
+              type="text"
+              disabled={isApproved}
+              className="input-field"
+              value={note.follow_up}
+              onChange={(e) => handleFieldChange("follow_up", e.target.value)}
+              placeholder="e.g. Review after 5 days or SOS if fever spikes"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Action Bar */}
+      <div className="clinic-card" style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div>
+          {isApproved ? (
+            <span style={{ color: "var(--success-color)", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.92rem" }}>
+              <CheckCircle2 size={18} /> Digitally Signed and Linked with ABHA ID
+            </span>
+          ) : (
+            <span style={{ color: "var(--muted-color)", fontSize: "0.88rem" }}>
+              Please review all extracted clinical findings before digitally signing.
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
           {!isApproved && (
             <>
               <button
                 type="button"
                 onClick={() => onSave(note)}
-                disabled={isSaving}
+                disabled={isSaving || isApproving}
                 className="btn btn-secondary"
+                style={{ padding: "10px 22px" }}
               >
                 <Save size={16} /> {isSaving ? "Saving..." : "Save Draft"}
               </button>
               <button
                 type="button"
                 onClick={() => onApprove(note)}
-                disabled={isApproving}
-                className="btn btn-primary"
+                disabled={isSaving || isApproving}
+                className="btn btn-success"
+                style={{ padding: "10px 24px" }}
               >
-                <CheckCircle2 size={16} /> {isApproving ? "Approving..." : "Approve & Sign"}
+                <CheckCircle2 size={16} /> {isApproving ? "Signing & Bundling..." : "Approve & Sign Note"}
               </button>
             </>
           )}
-
-          <button
-            type="button"
-            onClick={onExportPdf}
-            className="btn btn-secondary"
-          >
-            <Download size={16} /> PDF Note
-          </button>
-          <button
-            type="button"
-            onClick={onExportFhir}
-            className="btn btn-secondary"
-          >
-            <FileCode size={16} /> ABDM FHIR JSON
-          </button>
-        </div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "18px" }}>
-        {/* 1. Chief Complaint */}
-        <div>
-          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#cbd5e1" }}>
-            1. Chief Complaint
-          </label>
-          <input
-            type="text"
-            className="input-field"
-            value={note.chief_complaint}
-            disabled={isApproved}
-            onChange={(e) => handleFieldChange("chief_complaint", e.target.value)}
-            placeholder="e.g. Acute high grade fever and productive cough for 3 days"
-          />
-        </div>
-
-        {/* 2. History of Present Illness */}
-        <div>
-          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#cbd5e1" }}>
-            2. History of Present Illness (HPI)
-          </label>
-          <textarea
-            className="input-field"
-            rows={3}
-            value={note.history_of_present_illness}
-            disabled={isApproved}
-            onChange={(e) => handleFieldChange("history_of_present_illness", e.target.value)}
-            placeholder="Chronological narrative of symptom progression..."
-          />
-        </div>
-
-        {/* 3. Symptoms Tags */}
-        <div>
-          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#cbd5e1" }}>
-            3. Reported Symptoms
-          </label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "8px" }}>
-            {note.symptoms.map((sym, idx) => (
-              <span
-                key={idx}
-                style={{
-                  background: "rgba(13, 148, 136, 0.2)",
-                  border: "1px solid rgba(13, 148, 136, 0.4)",
-                  color: "#2dd4bf",
-                  padding: "4px 10px",
-                  borderRadius: "20px",
-                  fontSize: "0.85rem",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                {sym}
-                {!isApproved && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSymptom(idx)}
-                    style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", padding: 0 }}
-                  >
-                    &times;
-                  </button>
-                )}
-              </span>
-            ))}
-          </div>
-          {!isApproved && (
-            <div style={{ display: "flex", gap: "8px" }}>
-              <input
-                type="text"
-                className="input-field"
-                style={{ maxWidth: "240px" }}
-                placeholder="Add symptom..."
-                value={newSymptom}
-                onChange={(e) => setNewSymptom(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddSymptom(e)}
-              />
-              <button type="button" onClick={handleAddSymptom} className="btn btn-secondary" style={{ padding: "8px 12px" }}>
-                <Plus size={16} /> Add
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* 4. Examination & Vitals */}
-        <div>
-          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#cbd5e1" }}>
-            4. Clinical Examination & Vitals
-          </label>
-          <input
-            type="text"
-            className="input-field"
-            value={note.examination}
-            disabled={isApproved}
-            onChange={(e) => handleFieldChange("examination", e.target.value)}
-            placeholder="e.g. Temp: 101F, Pulse: 88 bpm, BP: 120/80 mmHg, Chest: Bilateral rhonchi"
-          />
-        </div>
-
-        {/* 5. Diagnosis */}
-        <div>
-          <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#cbd5e1" }}>
-            5. Provisional / Confirmed Diagnosis
-          </label>
-          <input
-            type="text"
-            className="input-field"
-            style={{ fontWeight: "600", color: "#38bdf8" }}
-            value={note.diagnosis}
-            disabled={isApproved}
-            onChange={(e) => handleFieldChange("diagnosis", e.target.value)}
-            placeholder="e.g. Acute Viral Bronchitis / URTI"
-          />
-        </div>
-
-        {/* 6. Medications Table (Rx) */}
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <label style={{ fontSize: "0.85rem", fontWeight: "600", color: "#cbd5e1" }}>
-              6. Medications Prescribed (Rx)
-            </label>
-            {!isApproved && (
-              <button type="button" onClick={handleAddMedication} className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.78rem" }}>
-                <Plus size={14} /> Add Medicine
-              </button>
-            )}
-          </div>
-
-          <div style={{ overflowX: "auto", border: "1px solid var(--border-color)", borderRadius: "8px" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
-              <thead>
-                <tr style={{ background: "rgba(255,255,255,0.04)", textAlign: "left", color: "var(--text-muted)" }}>
-                  <th style={{ padding: "8px 12px" }}>Medicine Name</th>
-                  <th style={{ padding: "8px 12px" }}>Dosage</th>
-                  <th style={{ padding: "8px 12px" }}>Frequency</th>
-                  <th style={{ padding: "8px 12px" }}>Duration</th>
-                  {!isApproved && <th style={{ padding: "8px 12px", width: "40px" }}></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {note.medications.length === 0 ? (
-                  <tr>
-                    <td colSpan={isApproved ? 4 : 5} style={{ padding: "12px", textAlign: "center", color: "var(--text-subtle)" }}>
-                      No medications listed yet.
-                    </td>
-                  </tr>
-                ) : (
-                  note.medications.map((med, idx) => (
-                    <tr key={idx} style={{ borderTop: "1px solid var(--border-color)" }}>
-                      <td style={{ padding: "6px 12px" }}>
-                        <input
-                          type="text"
-                          className="input-field"
-                          style={{ padding: "6px 8px" }}
-                          value={med.name}
-                          disabled={isApproved}
-                          onChange={(e) => handleMedChange(idx, "name", e.target.value)}
-                          placeholder="e.g. Tab Paracetamol"
-                        />
-                      </td>
-                      <td style={{ padding: "6px 12px" }}>
-                        <input
-                          type="text"
-                          className="input-field"
-                          style={{ padding: "6px 8px" }}
-                          value={med.dose}
-                          disabled={isApproved}
-                          onChange={(e) => handleMedChange(idx, "dose", e.target.value)}
-                          placeholder="e.g. 650 mg"
-                        />
-                      </td>
-                      <td style={{ padding: "6px 12px" }}>
-                        <input
-                          type="text"
-                          className="input-field"
-                          style={{ padding: "6px 8px" }}
-                          value={med.frequency}
-                          disabled={isApproved}
-                          onChange={(e) => handleMedChange(idx, "frequency", e.target.value)}
-                          placeholder="e.g. Thrice daily"
-                        />
-                      </td>
-                      <td style={{ padding: "6px 12px" }}>
-                        <input
-                          type="text"
-                          className="input-field"
-                          style={{ padding: "6px 8px" }}
-                          value={med.duration}
-                          disabled={isApproved}
-                          onChange={(e) => handleMedChange(idx, "duration", e.target.value)}
-                          placeholder="e.g. 5 days"
-                        />
-                      </td>
-                      {!isApproved && (
-                        <td style={{ padding: "6px 12px", textAlign: "center" }}>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMedication(idx)}
-                            style={{ background: "none", border: "none", color: "#f43f5e", cursor: "pointer" }}
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 7. Advice & Follow Up */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-          <div>
-            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#cbd5e1" }}>
-              7. Non-pharmacological Advice
-            </label>
-            <textarea
-              className="input-field"
-              rows={2}
-              value={note.advice}
-              disabled={isApproved}
-              onChange={(e) => handleFieldChange("advice", e.target.value)}
-              placeholder="e.g. Steam inhalation twice daily, warm water gargles, avoid cold drinks"
-            />
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px", color: "#cbd5e1" }}>
-              8. Follow-up Timeline
-            </label>
-            <textarea
-              className="input-field"
-              rows={2}
-              value={note.follow_up}
-              disabled={isApproved}
-              onChange={(e) => handleFieldChange("follow_up", e.target.value)}
-              placeholder="e.g. Review after 3 days if fever does not subside; SOS if breathless"
-            />
-          </div>
         </div>
       </div>
     </div>

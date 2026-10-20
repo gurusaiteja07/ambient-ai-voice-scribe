@@ -47,3 +47,7 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+backend/data/audio/*
+!backend/data/audio/.gitkeep
+backend/data/*.db
