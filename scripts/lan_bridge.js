@@ -29,3 +29,4 @@ console.log("\n[LAN Bridge Active] Clinic Voice Scribe accessible across LAN:");
 console.log("  Web Frontend:  http://10.145.117.193:5173/");
 console.log("  Mobile PWA:    http://10.145.117.193:5173/mobile/");
 console.log("  Backend API:   http://10.145.117.193:8000/docs");
+
