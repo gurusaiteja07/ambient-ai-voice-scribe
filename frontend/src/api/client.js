@@ -1,10 +1,14 @@
 import axios from "axios";
 
-// In development, Vite proxy forwards /auth, /patients, /sessions to backend
+// Determines API Base URL based on environment or access host
 const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-    // When accessed from mobile / LAN IP (e.g. 10.145.117.193)
+  // If accessing through Vite dev proxy on port 5173, relative paths route directly
+  if (typeof window !== "undefined" && window.location.port === "5173") {
+    return "";
+  }
+  // When accessed directly across LAN via host IP (e.g. 10.145.117.193)
+  if (typeof window !== "undefined" && window.location.hostname) {
     return `http://${window.location.hostname}:8000`;
   }
   return "";

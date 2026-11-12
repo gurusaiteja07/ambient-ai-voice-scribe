@@ -108,8 +108,8 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-* **API Health Check**: `http://localhost:8000/health` (returns `{"status":"ok"}`)
-* **Interactive Swagger UI**: `http://localhost:8000/docs`
+* **API Health Check**: `http://10.145.117.193:8000/health` (or `http://localhost:8000/health`)
+* **Interactive Swagger UI**: `http://10.145.117.193:8000/docs` (or `http://localhost:8000/docs`)
 
 > **Default Seed Accounts for Quick Testing**:
 > * **Doctor Email**: `doctor@hospital.gov.in`
@@ -126,11 +126,12 @@ cd frontend
 # 1. Install frontend packages
 npm install
 
-# 2. Run the Vite development server
+# 2. Run the Vite development server (bound to 0.0.0.0 for LAN access)
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+* **Web Application**: `http://10.145.117.193:5173/` (or `http://localhost:5173/`)
+* **Mobile PWA Extension**: `http://10.145.117.193:5173/mobile/`
 
 ---
 

@@ -1,10 +1,18 @@
+import os
+import sys
 import httpx
 
-def test_full_system_flow():
-    client = httpx.Client(base_url="http://127.0.0.1:8000")
-
-    # 1. Health check
-    r_health = client.get("/health")
+def test_full_system_flow(base_url: str = None):
+    target_url = base_url or os.environ.get("TARGET_URL") or "http://10.145.117.193:8000"
+    print(f"Connecting to Ambient AI Voice Scribe API at: {target_url}")
+    try:
+        client = httpx.Client(base_url=target_url, timeout=15.0)
+        r_health = client.get("/health")
+    except Exception:
+        fallback = "http://127.0.0.1:8000"
+        print(f"Fallback to localhost: {fallback}")
+        client = httpx.Client(base_url=fallback, timeout=15.0)
+        r_health = client.get("/health")
     assert r_health.status_code == 200
     assert r_health.json()["status"] == "ok"
     print("\n1. Health Check OK:", r_health.json())
