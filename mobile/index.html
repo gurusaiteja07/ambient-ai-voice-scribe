@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Ambient Scribe Mobile</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Top App Bar -->
+  <header class="app-bar">
+    <div class="brand">
+      <span class="brand-icon">🎙️</span>
+      <div>
+        <h1 class="brand-title">Voice Scribe Mobile</h1>
+        <p class="brand-sub">NHA & ABDM Clinical OPD</p>
+      </div>
+    </div>
+    <div id="authStatusBadge" class="badge badge-offline">Connecting...</div>
+  </header>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Main Views Container -->
+  <main class="main-content">
+    
+    <!-- VIEW 1: LOGIN VIEW -->
+    <section id="viewLogin" class="view">
+      <div class="card login-card">
+        <h2>Doctor Sign In</h2>
+        <p class="text-muted">Enter credentials or tap Quick Demo to sign in.</p>
+        <form id="formLogin">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" value="doctor@hospital.gov.in" required>
+          
+          <label>Password</label>
+          <input type="password" id="loginPassword" value="doctor123" required>
+
+          <button type="submit" class="btn btn-primary btn-block">Sign In to Clinic</button>
+          <button type="button" id="btnQuickDemo" class="btn btn-secondary btn-block">Fast Demo Login</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- VIEW 2: PATIENT QUEUE & REGISTRATION -->
+    <section id="viewPatients" class="view hidden">
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button id="tabQueue" class="tab-btn active">Patient Queue</button>
+        <button id="tabRegister" class="tab-btn">+ Record Patient</button>
+      </div>
+
+      <!-- Queue Subview -->
+      <div id="subviewQueue">
+        <div class="search-box">
+          <input type="text" id="inputSearchPatients" placeholder="Search patient name, OPD ID...">
+        </div>
+        <div id="patientList" class="patient-list">
+          <div class="loading-spinner">Loading patients...</div>
+        </div>
+      </div>
+
+      <!-- Register Subview -->
+      <div id="subviewRegister" class="hidden">
+        <div class="card">
+          <h3>Record New Patient</h3>
+          <form id="formRegisterPatient">
+            <label>Full Name *</label>
+            <input type="text" id="regName" placeholder="e.g. Sunita Devi" required>
+
+            <div class="grid-2">
+              <div>
+                <label>Age (Yrs) *</label>
+                <input type="number" id="regAge" placeholder="42" required>
+              </div>
+              <div>
+                <label>Gender *</label>
+                <select id="regGender">
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <label>Phone Number</label>
+            <input type="tel" id="regPhone" placeholder="+91 9876543210">
+
+            <label>ABHA ID (Ayushman Bharat)</label>
+            <input type="text" id="regAbha" placeholder="14-5521-8890-1234">
+
+            <!-- Vitals -->
+            <div class="vitals-group">
+              <h4>Baseline Vitals</h4>
+              <div class="grid-2">
+                <div>
+                  <label>BP (mmHg)</label>
+                  <input type="text" id="regBp" placeholder="120/80">
+                </div>
+                <div>
+                  <label>Pulse (bpm)</label>
+                  <input type="text" id="regPulse" placeholder="72">
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <label>Temp (°F)</label>
+                  <input type="text" id="regTemp" placeholder="98.6">
+                </div>
+                <div>
+                  <label>SpO2 (%)</label>
+                  <input type="text" id="regSpo2" placeholder="98">
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Save & Add to Queue</button>
+            <button type="button" id="btnSaveAndConsult" class="btn btn-accent btn-block">Save & Start Voice Scribe</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: AMBIENT CONSULTATION VOICE RECORDER -->
+    <section id="viewRecorder" class="view hidden">
+      <div class="card patient-badge-card">
+        <div class="patient-info">
+          <strong id="recPatientName">Patient Name</strong>
+          <span id="recPatientMeta" class="text-muted">45y, Male &bull; PID-1001</span>
+        </div>
+        <button id="btnBackToQueue" class="btn btn-sm btn-outline">Change</button>
+      </div>
+
+      <!-- Recorder Control Card -->
+      <div class="card recorder-card">
+        <div class="record-visualizer">
+          <div id="micRing" class="mic-ring idle">
+            <button id="btnToggleRecord" class="mic-button" aria-label="Toggle Recording">
+              <span id="micIcon">🎙️</span>
+            </button>
+          </div>
+          <div id="recTimer" class="rec-timer">00:00</div>
+          <div id="recStatusText" class="rec-status">Tap microphone to start recording</div>
+        </div>
+
+        <!-- Live Spoken English Caption -->
+        <div id="liveCaption" class="live-caption hidden">
+          <span class="caption-label">Listening (English):</span>
+          <p id="liveCaptionText">...</p>
+        </div>
+
+        <!-- Quick Dictation Box -->
+        <div class="quick-input-box">
+          <input type="text" id="inputDictation" placeholder="Dictate/type clinical symptom (e.g. fever 101F, cough)...">
+          <button id="btnAddDictation" class="btn btn-sm btn-secondary">Add</button>
+        </div>
+
+        <button id="btnStopAndNote" class="btn btn-primary btn-block" disabled>
+          Generate SOAP Clinical Note ➔
+        </button>
+      </div>
+
+      <!-- Live Transcripts List -->
+      <div class="card transcript-card">
+        <h3>Live Spoken Transcript</h3>
+        <div id="transcriptFeed" class="transcript-feed">
+          <p class="empty-state">No spoken audio recorded yet. Speak in English into your microphone.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: SOAP NOTE EDITOR & APPROVAL -->
+    <section id="viewNote" class="view hidden">
+      <div class="card note-header-card">
+        <div>
+          <h2 id="notePatientName">Patient Consultation Note</h2>
+          <span id="noteStatusBadge" class="badge badge-draft">Draft</span>
+        </div>
+        <button id="btnNewPatient" class="btn btn-sm btn-outline">+ Next Patient</button>
+      </div>
+
+      <div class="card note-body-card">
+        <label>Chief Complaint</label>
+        <textarea id="noteComplaint" rows="2"></textarea>
+
+        <label>History of Present Illness</label>
+        <textarea id="noteHpi" rows="2"></textarea>
+
+        <label>Diagnosis</label>
+        <input type="text" id="noteDiagnosis">
+
+        <label>Medications (Prescription)</label>
+        <textarea id="noteMedications" rows="3" placeholder="Medicine, dose, frequency, duration"></textarea>
+
+        <label>Investigations</label>
+        <input type="text" id="noteInvestigations" placeholder="e.g. CBC, Chest X-Ray">
+
+        <label>Doctor's Advice & Follow-Up</label>
+        <textarea id="noteAdvice" rows="2"></textarea>
+
+        <div class="action-buttons">
+          <button id="btnApproveNote" class="btn btn-primary btn-block">Sign & Approve Note (ABDM)</button>
+          <button id="btnPrintNote" class="btn btn-secondary btn-block">Print / Save PDF</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button id="navBtnPatients" class="nav-item active">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">Patients</span>
+    </button>
+    <button id="navBtnRecord" class="nav-item">
+      <span class="nav-icon">🎙️</span>
+      <span class="nav-label">Record</span>
+    </button>
+    <button id="navBtnNotes" class="nav-item">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">SOAP Note</span>
+    </button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>

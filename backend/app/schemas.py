@@ -67,6 +67,11 @@ class PatientCreate(BaseModel):
     age: int
     gender: str
     abha_id: Optional[str] = None
+    phone: Optional[str] = None
+    blood_group: Optional[str] = None
+    vitals: Optional[Dict[str, Any]] = None
+    medical_history: Optional[str] = None
+    allergies: Optional[str] = None
 
 
 class PatientResponse(BaseModel):
@@ -75,6 +80,11 @@ class PatientResponse(BaseModel):
     age: int
     gender: str
     abha_id: Optional[str] = None
+    phone: Optional[str] = None
+    blood_group: Optional[str] = None
+    vitals: Optional[Dict[str, Any]] = None
+    medical_history: Optional[str] = None
+    allergies: Optional[str] = None
     created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)

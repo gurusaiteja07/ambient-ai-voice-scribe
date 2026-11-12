@@ -4,6 +4,11 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 
+def utc_now():
+    """Returns current UTC datetime without timezone deprecation."""
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
 class Doctor(Base):
     __tablename__ = "doctors"
 
@@ -12,7 +17,7 @@ class Doctor(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     hospital = Column(String(255), nullable=True, default="District Hospital")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     # Relationships
     sessions = relationship("Session", back_populates="doctor", cascade="all, delete-orphan")
@@ -26,7 +31,12 @@ class Patient(Base):
     age = Column(Integer, nullable=False)
     gender = Column(String(20), nullable=False)  # Male, Female, Other
     abha_id = Column(String(50), nullable=True, index=True)  # Ayushman Bharat Health Account ID
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    phone = Column(String(30), nullable=True)  # Contact Phone Number
+    blood_group = Column(String(10), nullable=True)  # Blood group e.g. O+, A+
+    vitals = Column(JSON, nullable=True)  # Vitals: {"bp": "120/80", "pulse": "72", "temp": "98.6", "spo2": "99"}
+    medical_history = Column(Text, nullable=True)  # Past medical conditions/chronic illness
+    allergies = Column(Text, nullable=True)  # Known drug or food allergies
+    created_at = Column(DateTime, default=utc_now)
 
     # Relationships
     sessions = relationship("Session", back_populates="patient", cascade="all, delete-orphan")
@@ -40,7 +50,7 @@ class Session(Base):
     doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True)
     language = Column(String(50), default="English")  # English, Hindi, Bengali, etc.
     status = Column(String(30), default="active")  # active, completed, cancelled
-    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    started_at = Column(DateTime, default=utc_now)
     ended_at = Column(DateTime, nullable=True)
     audio_path = Column(String(500), nullable=True)
 
@@ -58,7 +68,7 @@ class Transcript(Base):
     session_id = Column(String(64), ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True)
     chunk_no = Column(Integer, nullable=False, default=1)
     text = Column(Text, nullable=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=utc_now)
 
     # Relationships
     session = relationship("Session", back_populates="transcripts")
@@ -73,7 +83,7 @@ class Note(Base):
     edited_json = Column(JSON, nullable=True)   # Doctor edited version
     status = Column(String(30), default="draft")  # draft, approved
     fhir_json = Column(JSON, nullable=True)     # ABDM FHIR R4 Bundle JSON
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     # Relationships
     session = relationship("Session", back_populates="note")

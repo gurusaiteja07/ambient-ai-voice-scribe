@@ -21,43 +21,45 @@
 
 ```
 ambient-ai-voice-scribe/
+|-- .github/workflows/ci.yml # Automated multi-stage GitHub Actions CI pipeline
+|-- ACADEMIC_PROJECT_REPORT.md# Complete Professor Academic Report (11 formal sections)
+|-- mobile/                  # Dedicated Mobile Extension & PWA Client
+|   |-- index.html           # Touch-optimized mobile layout
+|   |-- app.js               # Clean vanilla JavaScript client
+|   |-- style.css            # Responsive mobile styling
+|   |-- manifest.json, sw.js # PWA offline & add-to-home-screen support
+|   |-- README.md            # Mobile testing instructions
 |-- backend/
 |   |-- app/
-|   |   |-- main.py              # FastAPI entry point & lifespan init
-|   |   |-- config.py            # Environment configuration (Pydantic Settings)
-|   |   |-- database.py          # SQLAlchemy session & SQLite/Postgres engine
-|   |   |-- models.py            # Doctor, Patient, Session, Transcript, Note models
-|   |   |-- schemas.py           # Pydantic validation & SOAP note schema
-|   |   |-- auth.py              # JWT authentication & bcrypt hashing
+|   |   |-- main.py          # FastAPI entry point & lifespan init (mounts /mobile)
+|   |   |-- config.py        # Environment configuration (Pydantic Settings)
+|   |   |-- database.py      # SQLAlchemy session & SQLite/Postgres engine
+|   |   |-- models.py        # Doctor, Patient (vitals & history), Session, Note models
+|   |   |-- schemas.py       # Pydantic validation & SOAP note schema
+|   |   |-- auth.py          # JWT authentication & bcrypt hashing
 |   |   |-- routers/
-|   |   |   |-- auth.py          # Doctor login & registration endpoints
-|   |   |   |-- patients.py      # Patient creation & search (ABHA ID linked)
-|   |   |   |-- sessions.py      # Consultation session lifecycle & /stop summarizer
-|   |   |   |-- audio.py         # MediaRecorder chunk upload & STT pipeline
-|   |   |   |-- notes.py         # Clinical note edit, ABDM approval & export
+|   |   |   |-- auth.py      # Doctor login & registration endpoints
+|   |   |   |-- patients.py  # Patient creation, vitals, history & search
+|   |   |   |-- sessions.py  # Consultation session lifecycle & /stop summarizer
+|   |   |   |-- audio.py     # Speech chunk & transcript ingestion
+|   |   |   |-- notes.py     # Clinical note edit, ABDM approval & export
 |   |   |-- services/
-|   |   |   |-- stt_service.py   # faster-whisper speech transcription
-|   |   |   |-- summarizer.py    # LLM consultation summarizer (Ollama / Llama-3)
-|   |   |   |-- fhir_service.py  # ABDM FHIR R4 Document Bundle generation
-|   |   |   |-- pdf_service.py   # ReportLab consultation note generator
-|   |   |-- prompts/
-|   |   |   |-- soap_prompt.txt  # Strict zero-hallucination SOAP prompt template
+|   |   |   |-- stt_service.py # Speech transcription (Whisper/SpeechRecognition)
+|   |   |   |-- summarizer.py  # LLM consultation summarizer & clinical heuristic
+|   |   |   |-- fhir_service.py# ABDM FHIR R4 Document Bundle generation
+|   |   |   |-- pdf_service.py # ReportLab consultation note generator
 |   |-- tests/
-|   |   |-- test_api.py          # Health check, authentication, patient/session tests
-|   |   |-- test_stt.py          # STT service unit tests
-|   |   |-- test_summarizer.py   # Summarizer prompt & JSON schema tests
-|   |-- requirements.txt         # Python dependencies
-|   |-- Dockerfile               # Backend container configuration
+|   |   |-- test_api.py      # Health check, authentication, patient flow tests
+|   |   |-- verify_e2e.py    # End-to-end integration test runner
 |-- frontend/
 |   |-- src/
-|   |   |-- main.jsx, App.jsx    # React application root & workflow state machine
-|   |   |-- index.css            # Modern clinical glassmorphic styling system
-|   |   |-- api/
-|   |   |   |-- client.js        # Axios client with JWT interceptor
-|   |   |-- hooks/
-|   |   |   |-- useRecorder.js   # Browser MediaRecorder API & Web Audio visualizer
-|   |   |-- components/
-|   |   |   |-- Header.jsx       # Doctor identity & ABDM compliance bar
+|   |   |-- main.jsx, App.jsx# React application root & workflow state machine
+|   |   |-- api/client.js    # Axios client with JWT interceptor & aliased start
+|   |   |-- hooks/useRecorder.js # Web Speech API (en-US) + MediaRecorder hook
+|   |   |-- pages/
+|   |   |   |-- PatientSelect.jsx # Patient queue, vitals intake & history
+|   |   |   |-- Recorder.jsx      # Ambient English voice scribe & live caption
+|   |   |   |-- NoteEditor.jsx    # Doctor-in-the-loop review & export
 |   |   |   |-- ConsentModal.jsx # Patient consent checklist requirement
 |   |   |   |-- RecordButton.jsx # Dynamic recording button & waveform bars
 |   |   |   |-- TranscriptBox.jsx# Real-time scrolling transcript feed

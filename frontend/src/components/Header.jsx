@@ -1,25 +1,21 @@
 import React from "react";
-import { Stethoscope, ShieldCheck, LogOut, User, Phone, MapPin, Users, Mic, FileText } from "lucide-react";
+import { Stethoscope, ShieldCheck, LogOut, User, Users, Mic, FileText, Building2 } from "lucide-react";
 
 export function Header({ doctor, currentView, onLogout }) {
   return (
     <header className="header-branding" style={{ width: "100%", position: "sticky", top: 0, zIndex: 100 }}>
       {/* Clinic Top Bar */}
       <div className="clinic-topbar">
-        <div className="clinic-topbar-container">
+        <div className="clinic-topbar-container" style={{ justifyContent: "space-between" }}>
           <div className="topbar-info">
             <div className="topbar-item">
-              <Phone size={13} />
-              <span>NHA Toll-Free Helpline: <strong>1800-11-4477</strong> / Emergency: <strong>108</strong></span>
-            </div>
-            <div className="topbar-item">
-              <MapPin size={13} />
-              <span>OPD Dept, AIIMS New Delhi</span>
+              <Building2 size={13} />
+              <span>Facility: <strong>{doctor?.hospital || "Public Health Centre"}</strong></span>
             </div>
           </div>
           <div className="topbar-badges">
-            <span className="badge badge-abdm" style={{ fontSize: "0.7rem", padding: "3px 8px" }}>
-              <ShieldCheck size={12} /> ABDM Facility HPR-09821
+            <span className="badge badge-abdm" style={{ fontSize: "0.72rem", padding: "3px 8px" }}>
+              <ShieldCheck size={12} /> ABDM FHIR R4 Ready
             </span>
           </div>
         </div>
@@ -33,7 +29,7 @@ export function Header({ doctor, currentView, onLogout }) {
           </div>
           <div className="clinic-logo-text">
             <h1>Clinic <span style={{ color: "var(--accent-color)" }}>AI Scribe</span></h1>
-            <p>Indian Public Healthcare Ambient Consultation</p>
+            <p>Outpatient Consultation & Documentation</p>
           </div>
         </div>
 
@@ -51,7 +47,7 @@ export function Header({ doctor, currentView, onLogout }) {
           <span style={{ color: "var(--subtle-color)", fontSize: "0.8rem" }}>&rsaquo;</span>
           <div className={`stepper-step ${currentView === "note-editor" ? "active" : ""}`}>
             <FileText size={14} />
-            <span>3. Clinical Note & ABDM</span>
+            <span>3. Clinical Note & Review</span>
           </div>
         </div>
 
@@ -67,7 +63,7 @@ export function Header({ doctor, currentView, onLogout }) {
                   Dr. {doctor.name}
                 </div>
                 <div style={{ fontSize: "0.72rem", color: "var(--muted-color)" }}>
-                  {doctor.hospital || "AIIMS New Delhi"}
+                  {doctor.hospital || "Health Facility"}
                 </div>
               </div>
             </div>

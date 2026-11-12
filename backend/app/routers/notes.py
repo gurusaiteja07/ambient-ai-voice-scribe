@@ -33,18 +33,19 @@ def update_session_note(
     current_doctor: Doctor = Depends(get_current_doctor)
 ):
     """
-    Updates the edited clinical note.
-    Once approved, modifications are restricted.
+    Updates the clinical note. Doctors can edit any active or previous consultation
+    notes to append observations, corrections, or treatment plans.
     """
     note = db.query(Note).filter(Note.session_id == session_id).first()
     if not note:
         raise HTTPException(status_code=404, detail="Note not found for this session")
 
-    if note.status == "approved":
-        raise HTTPException(status_code=400, detail="Cannot edit an already approved note.")
+    # If original AI summary exists, preserve it; save doctor modifications in edited_json
+    if not note.summary_json:
+        note.summary_json = note.edited_json or note_update.edited_note.model_dump()
 
     note.edited_json = note_update.edited_note.model_dump()
-    note.updated_at = datetime.datetime.utcnow()
+    note.updated_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
     db.refresh(note)
     return note
@@ -93,7 +94,7 @@ def approve_session_note(
 
     note.status = "approved"
     note.fhir_json = fhir_bundle
-    note.updated_at = datetime.datetime.utcnow()
+    note.updated_at = datetime.datetime.now(datetime.timezone.utc)
 
     db.commit()
     db.refresh(note)

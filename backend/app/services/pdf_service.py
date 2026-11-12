@@ -79,7 +79,7 @@ class PDFService:
             story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#0f766e"), spaceAfter=10))
 
             # Patient & Doctor Info Table
-            now_str = datetime.datetime.utcnow().strftime("%d %b %Y, %H:%M UTC")
+            now_str = datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %H:%M UTC")
             abha = patient_data.get("abha_id") or "Not Linked"
             info_data = [
                 [

@@ -24,7 +24,8 @@ def start_session(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found. Create patient first.")
 
-    session_id = f"SES-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    session_id = f"SES-{now_utc.strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
     new_session = SessionModel(
         id=session_id,
@@ -32,7 +33,7 @@ def start_session(
         doctor_id=current_doctor.id,
         language=session_in.language or "English",
         status="active",
-        started_at=datetime.datetime.utcnow()
+        started_at=now_utc
     )
     db.add(new_session)
     db.commit()
@@ -67,9 +68,10 @@ async def stop_session_and_summarize(
     if not session_obj:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
     # Mark session as completed
     session_obj.status = "completed"
-    session_obj.ended_at = datetime.datetime.utcnow()
+    session_obj.ended_at = now_utc
 
     # Collect full transcript chunks in order
     transcripts = (
@@ -87,7 +89,7 @@ async def stop_session_and_summarize(
     existing_note = db.query(Note).filter(Note.session_id == session_id).first()
     if existing_note:
         existing_note.summary_json = structured_note
-        existing_note.updated_at = datetime.datetime.utcnow()
+        existing_note.updated_at = now_utc
         note_obj = existing_note
     else:
         note_obj = Note(
@@ -95,7 +97,7 @@ async def stop_session_and_summarize(
             summary_json=structured_note,
             edited_json=structured_note,  # Initial draft is identical
             status="draft",
-            updated_at=datetime.datetime.utcnow()
+            updated_at=now_utc
         )
         db.add(note_obj)
 

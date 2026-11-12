@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
+export function useRecorder({ onChunkReady, chunkIntervalMs = 8000 }) {
   const [isRecording, setIsRecording] = useState(false);
   const [duration, setDuration] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [liveTranscript, setLiveTranscript] = useState("");
   const [error, setError] = useState(null);
 
   const mediaRecorderRef = useRef(null);
@@ -13,8 +14,10 @@ export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
   const animFrameRef = useRef(null);
   const timerIntervalRef = useRef(null);
   const chunkCounterRef = useRef(1);
+  const recognitionRef = useRef(null);
+  const speechBufferRef = useRef("");
 
-  // Clean up audio streams and contexts
+  // Clean up audio streams, recognition, and contexts
   const cleanup = useCallback(() => {
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
@@ -23,6 +26,12 @@ export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
+    }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+      recognitionRef.current = null;
     }
     if (audioContextRef.current && audioContextRef.current.state !== "closed") {
       audioContextRef.current.close().catch(() => {});
@@ -52,6 +61,9 @@ export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
 
   const startRecording = useCallback(async () => {
     setError(null);
+    setLiveTranscript("");
+    speechBufferRef.current = "";
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -64,17 +76,65 @@ export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
 
       // Web Audio API for visualizer
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      const audioCtx = new AudioCtx();
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      source.connect(analyser);
+      if (AudioCtx) {
+        const audioCtx = new AudioCtx();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
 
-      audioContextRef.current = audioCtx;
-      analyserRef.current = analyser;
-      updateAudioMeter();
+        audioContextRef.current = audioCtx;
+        analyserRef.current = analyser;
+        updateAudioMeter();
+      }
 
-      // Pick supported MIME type
+      // Initialize Web Speech API for English Speech Recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognizer = new SpeechRecognition();
+          recognizer.continuous = true;
+          recognizer.interimResults = true;
+          recognizer.lang = "en-US";
+
+          recognizer.onresult = (event) => {
+            let interim = "";
+            let final = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const res = event.results[i];
+              if (res.isFinal) {
+                final += res[0].transcript + " ";
+              } else {
+                interim += res[0].transcript;
+              }
+            }
+            if (final) {
+              speechBufferRef.current = (speechBufferRef.current + " " + final).trim();
+            }
+            setLiveTranscript((speechBufferRef.current + " " + interim).trim());
+          };
+
+          recognizer.onerror = (e) => {
+            console.warn("SpeechRecognition event:", e.error);
+          };
+
+          recognizer.onend = () => {
+            // Auto restart while recording is active
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+              try {
+                recognizer.start();
+              } catch (e) {}
+            }
+          };
+
+          recognizer.start();
+          recognitionRef.current = recognizer;
+        } catch (e) {
+          console.warn("Could not start Web Speech Recognition:", e);
+        }
+      }
+
+      // Pick supported MIME type for MediaRecorder
       const mimeTypes = [
         "audio/webm;codecs=opus",
         "audio/webm",
@@ -82,7 +142,6 @@ export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
         "audio/mp4",
       ];
       const selectedMime = mimeTypes.find((m) => MediaRecorder.isTypeSupported(m)) || "";
-
       const options = selectedMime ? { mimeType: selectedMime } : {};
       const recorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = recorder;
@@ -91,18 +150,20 @@ export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
       recorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
           const currentChunk = chunkCounterRef.current++;
+          const currentSpokenText = speechBufferRef.current.trim();
+          // Reset segment buffer for next chunk
+          speechBufferRef.current = "";
+
           if (onChunkReady) {
-            onChunkReady(event.data, currentChunk);
+            onChunkReady(event.data, currentChunk, currentSpokenText);
           }
         }
       };
 
-      // Request timeslice chunks every chunkIntervalMs
       recorder.start(chunkIntervalMs);
       setIsRecording(true);
       setDuration(0);
 
-      // Duration ticker
       timerIntervalRef.current = setInterval(() => {
         setDuration((prev) => prev + 1);
       }, 1000);
@@ -118,7 +179,9 @@ export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {}
     }
     setIsRecording(false);
     cleanup();
@@ -134,6 +197,7 @@ export function useRecorder({ onChunkReady, chunkIntervalMs = 10000 }) {
     isRecording,
     duration,
     audioLevel,
+    liveTranscript,
     error,
     startRecording,
     stopRecording,

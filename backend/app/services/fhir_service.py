@@ -18,7 +18,7 @@ class FHIRService:
         composition_id = str(uuid.uuid4())
         patient_resource_id = patient_data.get("id", str(uuid.uuid4()))
         practitioner_resource_id = f"doc-{doctor_data.get('id', '1')}"
-        now_iso = datetime.datetime.utcnow().isoformat() + "Z"
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
 
         # 1. Composition Resource
         composition = {

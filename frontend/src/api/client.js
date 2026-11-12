@@ -1,7 +1,16 @@
 import axios from "axios";
 
-// In development, Vite proxy forwards /auth, /patients, /sessions to http://127.0.0.1:8000
-const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+// In development, Vite proxy forwards /auth, /patients, /sessions to backend
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    // When accessed from mobile / LAN IP (e.g. 10.145.117.193)
+    return `http://${window.location.hostname}:8000`;
+  }
+  return "";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -50,6 +59,26 @@ export const api = {
       }
       return res.data;
     },
+    async register(name, email, password, hospital = "District Hospital") {
+      const res = await apiClient.post("/auth/register", {
+        name,
+        email,
+        password,
+        hospital,
+      });
+      if (res.data.access_token) {
+        localStorage.setItem("scribe_token", res.data.access_token);
+        localStorage.setItem(
+          "scribe_doctor",
+          JSON.stringify({
+            id: res.data.doctor_id,
+            name: res.data.doctor_name,
+            hospital: res.data.hospital,
+          })
+        );
+      }
+      return res.data;
+    },
     logout() {
       localStorage.removeItem("scribe_token");
       localStorage.removeItem("scribe_doctor");
@@ -77,6 +106,14 @@ export const api = {
       const res = await apiClient.get(`/patients/${patientId}`);
       return res.data;
     },
+    async update(patientId, patientData) {
+      const res = await apiClient.put(`/patients/${patientId}`, patientData);
+      return res.data;
+    },
+    async getHistory(patientId) {
+      const res = await apiClient.get(`/patients/${patientId}/history`);
+      return res.data;
+    },
   },
 
   // Sessions API
@@ -87,6 +124,9 @@ export const api = {
         language,
       });
       return res.data;
+    },
+    async start(patientId, language = "English") {
+      return this.create(patientId, language);
     },
     async get(sessionId) {
       const res = await apiClient.get(`/sessions/${sessionId}`);
@@ -102,17 +142,29 @@ export const api = {
     },
   },
 
-  // Audio Chunk Upload
+  // Audio Chunk & Transcript Upload
   audio: {
-    async uploadChunk(sessionId, audioBlob, chunkNo) {
+    async uploadChunk(sessionId, audioBlob, chunkNo, transcriptText = "") {
       const formData = new FormData();
-      formData.append("file", audioBlob, `chunk_${chunkNo}.webm`);
+      if (audioBlob) {
+        formData.append("file", audioBlob, `chunk_${chunkNo}.webm`);
+      }
       formData.append("chunk_no", chunkNo);
+      if (transcriptText) {
+        formData.append("transcript_text", transcriptText);
+      }
 
       const res = await apiClient.post(`/sessions/${sessionId}/audio`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+      });
+      return res.data;
+    },
+    async sendTranscriptChunk(sessionId, chunkNo, text) {
+      const res = await apiClient.post(`/sessions/${sessionId}/transcript-chunk`, {
+        chunk_no: chunkNo,
+        text,
       });
       return res.data;
     },

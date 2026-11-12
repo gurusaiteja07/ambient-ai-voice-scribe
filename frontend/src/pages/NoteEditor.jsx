@@ -59,19 +59,42 @@ export function NoteEditor({ sessionId, patient, initialNote, onNewConsultation 
     }
   };
 
-  const handleExportPdf = () => {
-    window.print();
+  const handleExportPdf = async () => {
+    try {
+      const blob = await api.notes.downloadFile(sessionId, "pdf");
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `consultation_note_${sessionId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn("Could not download backend PDF, falling back to window.print():", err);
+      window.print();
+    }
   };
 
-  const handleExportFhir = () => {
-    if (!noteData) return;
-    const blob = new Blob([JSON.stringify(noteData, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `FHIR_bundle_${patient.id}_${sessionId}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExportFhir = async () => {
+    try {
+      const fhirData = await api.notes.downloadFile(sessionId, "fhir");
+      const blob = new Blob([JSON.stringify(fhirData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `FHIR_bundle_${patient?.id || "patient"}_${sessionId}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.warn("Could not fetch FHIR bundle from backend, exporting local note:", err);
+      if (!noteData) return;
+      const blob = new Blob([JSON.stringify(noteData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `consultation_note_${sessionId}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (

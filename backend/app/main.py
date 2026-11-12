@@ -103,3 +103,12 @@ app.include_router(patients.router)
 app.include_router(sessions.router)
 app.include_router(audio.router)
 app.include_router(notes.router)
+
+# Mount Mobile Extension static application
+import os
+from fastapi.staticfiles import StaticFiles
+
+mobile_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "mobile"))
+if os.path.exists(mobile_dir):
+    app.mount("/mobile", StaticFiles(directory=mobile_dir, html=True), name="mobile")
+    logger.info(f"Mounted mobile extension from {mobile_dir} at /mobile")

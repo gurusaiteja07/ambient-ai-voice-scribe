@@ -37,12 +37,12 @@ def login(
     )
 
 
-@router.post("/register", response_model=DoctorResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 def register(
     doctor_in: DoctorCreate,
     db: Session = Depends(get_db)
 ):
-    """Registers a new doctor."""
+    """Registers a new doctor and returns active session JWT token."""
     existing = db.query(Doctor).filter(Doctor.email == doctor_in.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Doctor with this email already exists")
@@ -51,9 +51,19 @@ def register(
         name=doctor_in.name,
         email=doctor_in.email,
         password_hash=get_password_hash(doctor_in.password),
-        hospital=doctor_in.hospital or "Community Health Centre"
+        hospital=doctor_in.hospital or "District Hospital"
     )
     db.add(new_doc)
     db.commit()
     db.refresh(new_doc)
-    return new_doc
+
+    access_token = create_access_token(
+        data={"sub": new_doc.email, "doctor_id": new_doc.id, "name": new_doc.name}
+    )
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        doctor_id=new_doc.id,
+        doctor_name=new_doc.name,
+        hospital=new_doc.hospital
+    )
